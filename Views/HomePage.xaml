@@ -18,9 +18,21 @@
 
         <StackPanel Grid.Row="1" Grid.Column="1" Margin="5,0,0,0" HorizontalAlignment="Center">
             <Label>What will you be working on next?</Label>
-            <TextBox x:Name="txtName" />
+            <TextBox />
             <TextBlock Text="{Binding Time}" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            <Button Margin="0,5,0,0" Command="{Binding StartTrackingCommand}">Start</Button>
+            <Button x:Name="TrackButton" Margin="0,5,0,0" Command="{Binding ToggleTrackingCommand}">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Content" Value="Start"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsTracking}" Value="True">
+                                <Setter Property="Content" Value="Stop"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+            <ListBox ItemsSource="{Binding WorkLogs}" />
         </StackPanel>
     </Grid>
 </UserControl>
