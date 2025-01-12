@@ -18,9 +18,9 @@
 
         <StackPanel Grid.Row="1" Grid.Column="1" Margin="5,0,0,0" HorizontalAlignment="Center">
             <Label>What will you be working on next?</Label>
-            <TextBox />
+            <TextBox Text="{Binding WorkTitle, UpdateSourceTrigger=PropertyChanged}"/>
             <TextBlock Text="{Binding Time}" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            <Button x:Name="TrackButton" Margin="0,5,0,0" Command="{Binding ToggleTrackingCommand}">
+            <Button Margin="0,5,0,0" Command="{Binding ToggleTrackingCommand}">
                 <Button.Style>
                     <Style TargetType="Button">
                         <Setter Property="Content" Value="Start"/>

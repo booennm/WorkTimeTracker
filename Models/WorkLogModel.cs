@@ -9,53 +9,67 @@ namespace WorkTimeTracker.Models
 {
     public class WorkLogModel
     {
-        public class Student : INotifyPropertyChanged
+        public class WorkLog : INotifyPropertyChanged
         {
             //example model:
 
-            private string firstName;
-            private string lastName;
+            private DateTime date;
+            private string title;
+            private string duration;
 
-            public string FirstName
+            public DateTime Date
             {
                 get
                 {
-                    return firstName;
+                    return date;
                 }
 
                 set
                 {
-                    if (firstName != value)
+                    if (date != value)
                     {
-                        firstName = value;
-                        RaisePropertyChanged("FirstName");
-                        RaisePropertyChanged("FullName");
+                        date = value;
+                        RaisePropertyChanged("Date");
                     }
                 }
             }
 
-            public string LastName
+            public string Title
             {
-                get { return lastName; }
+                get { return title; }
 
                 set
                 {
-                    if (lastName != value)
+                    if (title != value)
                     {
-                        lastName = value;
-                        RaisePropertyChanged("LastName");
-                        RaisePropertyChanged("FullName");
+                        title = value;
+                        RaisePropertyChanged("Title");
                     }
                 }
             }
 
+            public string Duration
+            {
+                get { return duration; }
+
+                set
+                {
+                    if (duration != value)
+                    {
+                        duration = value;
+                        RaisePropertyChanged("Duration");
+                    }
+                }
+            }
+
+            /* example
             public string FullName
             {
                 get
                 {
                     return firstName + " " + lastName;
                 }
-            }
+            }*/
 
             public event PropertyChangedEventHandler PropertyChanged;
 

@@ -1,5 +1,7 @@
 using System;
 using System.Data.SQLite;
+using System.Text.Json;
+using static WorkTimeTracker.Models.WorkLogModel;
 
 namespace WorkTimeTracker.Helpers
 {
@@ -12,10 +14,12 @@ namespace WorkTimeTracker.Helpers
             using (var connection = new SQLiteConnection(connectionString))
             {
                 connection.Open();
+
                 string createTableQuery = @"
                     CREATE TABLE IF NOT EXISTS WorkLog (
                         Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        Timestamp TEXT NOT NULL,
+                        Date TEXT NOT NULL,
+                        Title TEXT NOT NULL,
                         Duration TEXT NOT NULL
                     )";
                 using (var command = new SQLiteCommand(createTableQuery, connection))
@@ -25,31 +29,50 @@ namespace WorkTimeTracker.Helpers
             }
         }
 
-        public static bool SaveWorkLog(string duration)
+        public static bool SaveWorkLogToSQLite(string log)
         {
             try
             {
-                using (var connection = new SQLiteConnection(connectionString))
+                var logJSON = JsonSerializer.Deserialize<WorkLog>(log);
+                if(logJSON != null)
                 {
-                    connection.Open();
-                    string insertQuery = "INSERT INTO WorkLog (Timestamp, Duration) VALUES (@timestamp, @duration)";
-                    using (var command = new SQLiteCommand(insertQuery, connection))
+                    using (var connection = new SQLiteConnection(connectionString))
                     {
-                        command.Parameters.AddWithValue("@timestamp", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                        command.Parameters.AddWithValue("@duration", duration);
-                        command.ExecuteNonQuery();
+                        connection.Open();
+                        string insertQuery = "INSERT INTO WorkLog (Date, Title, Duration) VALUES (@date, @title, @duration)";
+                        using (var command = new SQLiteCommand(insertQuery, connection))
+                        {
+                            command.Parameters.AddWithValue("@date", logJSON.Date.ToString("yyyy-MM-dd"));
+                            command.Parameters.AddWithValue("@title", logJSON.Title);
+                            command.Parameters.AddWithValue("@duration", logJSON.Duration);
+                            command.ExecuteNonQuery();
+                        }
                     }
+                    return true;
+                }else
+                {
+                    throw new JsonException("Could not deserialize new worklog");
                 }
-                return true;
             }
-            catch (Exception)
+            catch (JsonException jsonEx)
+            { 
+                Console.WriteLine($"JSON Error: {jsonEx.Message}");
+                return false;
+            }
+            catch (SQLiteException sqlEx)
             {
+                Console.WriteLine($"SQLite Error: {sqlEx.Message}");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
                 return false;
             }
             
         }
 
-        public static SQLiteDataReader GetWorkLogs()
+        public static SQLiteDataReader GetWorkLogsFromSQLite()
         {
             var connection = new SQLiteConnection(connectionString);
             connection.Open();
@@ -57,6 +80,28 @@ namespace WorkTimeTracker.Helpers
             using (var command = new SQLiteCommand(selectQuery, connection))
             {
                 return command.ExecuteReader();
+            }
+        }
+
+        public static void ClearWorkLogs()
+        {
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+                string deleteQuery = "DELETE FROM WorkLog";
+                using (var command = new SQLiteCommand(deleteQuery, connection))
+                {
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public static void ClearWorklogTable(SQLiteConnection connection)
+        {
+            string dropTableQuery = "DROP TABLE IF EXISTS WorkLog";
+            using (var command = new SQLiteCommand(dropTableQuery, connection))
+            {
+                command.ExecuteNonQuery();
             }
         }
     }

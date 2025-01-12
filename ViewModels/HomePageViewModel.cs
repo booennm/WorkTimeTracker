@@ -5,11 +5,13 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 using WorkTimeTracker.Helpers;
+using static WorkTimeTracker.Models.WorkLogModel;
 
 namespace WorkTimeTracker.ViewModels
 {
@@ -26,6 +28,17 @@ namespace WorkTimeTracker.ViewModels
             {
                 time = value;
                 OnPropertyChanged(nameof(Time));
+            }
+        }
+
+        private string workTitle = "";
+        public string WorkTitle
+        {
+            get { return workTitle; }
+            set
+            {
+                workTitle = value;
+                OnPropertyChanged(nameof(WorkTitle));
             }
         }
 
@@ -56,7 +69,7 @@ namespace WorkTimeTracker.ViewModels
             timer.Tick += Timer_Tick;
 
             ToggleTrackingCommand = new RelayCommand(_ => ToggleTracking());
-
+            //DatabaseHelper.ClearWorkLogs();
             LoadWorkLogs();
         }
 
@@ -70,11 +83,11 @@ namespace WorkTimeTracker.ViewModels
             try
             {
                 WorkLogs.Clear();
-                using (var reader = DatabaseHelper.GetWorkLogs())
+                using (var reader = DatabaseHelper.GetWorkLogsFromSQLite())
                 {
                     while (reader.Read())
                     {
-                        string logEntry = $"{reader["Timestamp"]}: {reader["Duration"]}";
+                        string logEntry = $"{reader["Date"]}: {reader["Title"]}\n{reader["Duration"]}";
                         WorkLogs.Add(logEntry);
                     }
                 }
@@ -96,7 +109,7 @@ namespace WorkTimeTracker.ViewModels
             {
                 timer.Stop();
                 stopwatch.Stop();
-                if (DatabaseHelper.SaveWorkLog(Time))
+                if (SaveWorkLog())
                 {
                     Time = "00:00:00";
                     stopwatch.Reset();
@@ -109,6 +122,18 @@ namespace WorkTimeTracker.ViewModels
             }
 
             OnPropertyChanged(nameof(IsTracking));
+        }
+
+        private bool SaveWorkLog()
+        {
+            var logEntry = new WorkLog
+            {
+                Date = DateTime.Now,
+                Title = WorkTitle,
+                Duration = Time
+            };
+            var logJSON = JsonSerializer.Serialize(logEntry);
+            return DatabaseHelper.SaveWorkLogToSQLite(logJSON);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
